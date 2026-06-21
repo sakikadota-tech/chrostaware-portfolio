@@ -8,6 +8,9 @@
 <meta property="og:title" content="ChroStaware ｜ AI開発ポートフォリオ">
 <meta property="og:description" content="内部統制を、あなたの会社に。AIで、経営者の思想をスタイリッシュな仕組みに。">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://sakikadota-tech.github.io/chrostaware-portfolio/">
+<meta property="og:image" content="https://sakikadota-tech.github.io/chrostaware-portfolio/work-efficiency.jpg">
+<meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -23,7 +26,7 @@
     --bg-soft:#fafafa;
     --ink:#23263a;         /* 深いインク：信頼・統制・ガバナンスの錨 */
     --ink-deep:#191b27;    /* 暗いサーフェス（宣言バンド・フッター） */
-    --muted:#7c7f8e;       /* 補助テキスト */
+    --muted:#6b6e7d;       /* 補助テキスト（コントラストAA確保のため少し濃く） */
     --line:#e8e5df;        /* 温かいヘアライン */
     --serif:"Noto Serif JP","Hiragino Mincho ProN","Yu Mincho",serif;
     --sans:"Noto Sans JP","Hiragino Kaku Gothic ProN","Meiryo",sans-serif;
@@ -183,6 +186,14 @@
   }
   #contact .btn:hover{background:var(--ink-deep);box-shadow:var(--shadow-md);transform:translateY(-2px);}
   footer{font-family:var(--sans);background:var(--ink-deep);color:rgba(255,255,255,.5);text-align:center;padding:40px;font-size:12px;letter-spacing:.1em;}
+
+  /* ===== アクセシビリティ ===== */
+  body.modal-open{overflow:hidden;}   /* モーダル表示中は背景スクロールを固定 */
+  a:focus-visible,button:focus-visible,.work:focus-visible{outline:2px solid var(--rose);outline-offset:3px;border-radius:4px;}
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important;}
+    .mission .card:hover,.work:hover,.hero .cta:hover,#contact .btn:hover{transform:none;}
+  }
 </style>
 </head>
 <body>
@@ -229,7 +240,7 @@
   <div class="wrap">
     <div class="sec-head">
       <div class="sec-label"><span class="num">01</span>VISION</div>
-      <div class="sec-title">内部統制は、規模で決まらない。</div>
+      <h2 class="sec-title">内部統制は、規模で決まらない。</h2>
       <p class="sec-desc">コストも人的リソースも、もう言い訳にならない時代。AIを使えば、小規模事業者でも「経営者の思想を反映した内部統制」を、無理なく・美しく実装できます。</p>
     </div>
     <div class="mission">
@@ -257,7 +268,7 @@
   <div class="wrap">
     <div class="sec-head">
       <div class="sec-label"><span class="num">02</span>WORKS</div>
-      <div class="sec-title">実績ギャラリー</div>
+      <h2 class="sec-title">実績ギャラリー</h2>
       <p class="sec-desc">AIで内部統制を形にした成果物です。カテゴリで絞り込めます。各カードをクリックすると、課題・作ったもの・結果の詳細が開きます。</p>
     </div>
 
@@ -275,9 +286,9 @@
 </section>
 
 <!-- ④ 詳細モーダル -->
-<div class="modal" id="modal">
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="m-title">
   <div class="modal-box">
-    <button class="close" id="closeBtn">×</button>
+    <button class="close" id="closeBtn" aria-label="閉じる" type="button">×</button>
     <img id="m-img" src="" alt="">
     <div class="modal-body">
       <span class="tag" id="m-tag"></span>
@@ -345,11 +356,15 @@
     works.filter(w => filter==="all" || w.cat===filter).forEach((w)=>{
       const el = document.createElement("div");
       el.className = "work";
+      el.setAttribute("role", "button");
+      el.setAttribute("tabindex", "0");
+      el.setAttribute("aria-label", w.title + " の詳細を開く");
       el.innerHTML = `
         <div class="thumb"><span class="tag">${w.catLabel}</span>
           <img src="${w.img}" alt="${w.title}" loading="lazy"></div>
         <div class="meta"><h3>${w.title}</h3><p>${w.problem}</p></div>`;
       el.addEventListener("click", ()=>openModal(w));
+      el.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openModal(w); } });
       gallery.appendChild(el);
     });
   }
@@ -366,8 +381,13 @@
 
   // ===== モーダル =====
   const modal = document.getElementById("modal");
+  const closeBtn = document.getElementById("closeBtn");
+  let lastFocused = null;   // モーダルを開く直前のフォーカス位置を覚えておく
   function openModal(w){
-    document.getElementById("m-img").src = w.img;
+    lastFocused = document.activeElement;
+    const img = document.getElementById("m-img");
+    img.src = w.img;
+    img.alt = w.title;
     document.getElementById("m-tag").textContent = w.catLabel;
     document.getElementById("m-title").textContent = w.title;
     document.getElementById("m-problem").textContent = w.problem;
@@ -375,9 +395,17 @@
     document.getElementById("m-result").textContent = w.result;
     document.getElementById("m-tech").textContent = w.tech;
     modal.classList.add("open");
+    document.body.classList.add("modal-open");
+    closeBtn.focus();   // 開いたら閉じるボタンへフォーカスを移す
   }
-  document.getElementById("closeBtn").addEventListener("click", ()=>modal.classList.remove("open"));
-  modal.addEventListener("click", e=>{ if(e.target===modal) modal.classList.remove("open"); });
+  function closeModal(){
+    modal.classList.remove("open");
+    document.body.classList.remove("modal-open");
+    if(lastFocused) lastFocused.focus();   // 閉じたら元の位置へフォーカスを戻す
+  }
+  closeBtn.addEventListener("click", closeModal);
+  modal.addEventListener("click", e=>{ if(e.target===modal) closeModal(); });
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape" && modal.classList.contains("open")) closeModal(); });
 </script>
 </body>
 </html>
