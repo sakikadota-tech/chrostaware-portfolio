@@ -43,7 +43,7 @@
   }
   a{color:inherit;text-decoration:none;}
   .wrap{max-width:1200px;margin:0 auto;padding:0 32px;}
-  .accent{color:var(--rose);}
+  .accent{color:var(--rose-text);}   /* 大見出しの強調もAA基準の濃さに */
 
   /* ===== ナビ ===== */
   header.nav{
@@ -136,6 +136,7 @@
   .work:hover{transform:translateY(-4px);box-shadow:var(--shadow-sm);}
   .work .thumb{position:relative;aspect-ratio:4/3;overflow:hidden;background:var(--bg-warm);}
   .work .thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .work .thumb.no-img::after{content:"画像を読み込めませんでした";position:absolute;inset:0;display:grid;place-items:center;color:var(--muted);font-family:var(--sans);font-size:12px;text-align:center;padding:12px;}
   .work .tag{
     font-family:var(--sans);position:absolute;top:12px;left:12px;background:rgba(255,255,255,.92);color:var(--ink);
     font-size:11px;font-weight:600;letter-spacing:.05em;padding:5px 14px;border-radius:50px;
@@ -222,7 +223,7 @@
       <a href="#works" class="cta">実績を見る →</a>
     </div>
     <div class="hero-art">
-      <img src="work-efficiency.jpg" alt="コンセプトイメージ" width="1200" height="1200" fetchpriority="high" decoding="async">
+      <img src="work-efficiency.jpg" alt="コンセプトイメージ" width="1200" height="1200" fetchpriority="high" decoding="async" onerror="this.style.display='none'">
     </div>
   </div>
 </section>
@@ -247,17 +248,17 @@
     </div>
     <div class="mission">
       <div class="card">
-        <div class="ico">🔍</div>
+        <div class="ico" aria-hidden="true">🔍</div>
         <h3>見える化する</h3>
         <p>どんぶり勘定や暗黙のルールを、誰の目にも分かる形に可視化します。</p>
       </div>
       <div class="card">
-        <div class="ico">🔑</div>
+        <div class="ico" aria-hidden="true">🔑</div>
         <h3>属人化を、なくす</h3>
         <p>「あの人しか分からない」を解消し、人が変わっても回る仕組みに。</p>
       </div>
       <div class="card">
-        <div class="ico">✨</div>
+        <div class="ico" aria-hidden="true">✨</div>
         <h3>思想を、仕組みに</h3>
         <p>経営者の考えと方針を、そのままスタイリッシュな統制へ落とし込みます。</p>
       </div>
@@ -388,10 +389,12 @@
     tag.className = "tag";
     tag.textContent = w.catLabel;
     const img = document.createElement("img");
-    img.src = w.img;
     img.alt = w.title;
     img.loading = "lazy";
     img.decoding = "async";
+    // 画像が読み込めないときは隠して「画像を読み込めませんでした」を表示(onerrorはsrc代入の前に設定)
+    img.addEventListener("error", () => { img.style.display = "none"; thumb.classList.add("no-img"); });
+    img.src = w.img;
     thumb.append(tag, img);
 
     const meta = document.createElement("div");
@@ -430,7 +433,7 @@
   // ===== フィルター =====
   document.querySelectorAll(".filters button").forEach(btn=>{
     btn.addEventListener("click", ()=>{
-      document.querySelector(".filters .active").classList.remove("active");
+      document.querySelector(".filters .active")?.classList.remove("active");
       btn.classList.add("active");
       render(btn.dataset.filter);
     });
@@ -443,14 +446,16 @@
   function openModal(w){
     lastFocused = document.activeElement;
     const img = document.getElementById("m-img");
+    img.style.display = "";                                  // 前回失敗時の非表示をリセット
+    img.onerror = () => { img.style.display = "none"; };     // 読み込み失敗時は画像を隠す
     img.src = w.img;
-    img.alt = w.title;
-    document.getElementById("m-tag").textContent = w.catLabel;
-    document.getElementById("m-title").textContent = w.title;
-    document.getElementById("m-problem").textContent = w.problem;
-    document.getElementById("m-made").textContent = w.made;
-    document.getElementById("m-result").textContent = w.result;
-    document.getElementById("m-tech").textContent = w.tech;
+    img.alt = w.title ?? "";
+    document.getElementById("m-tag").textContent = w.catLabel ?? "";
+    document.getElementById("m-title").textContent = w.title ?? "";
+    document.getElementById("m-problem").textContent = w.problem ?? "";
+    document.getElementById("m-made").textContent = w.made ?? "";
+    document.getElementById("m-result").textContent = w.result ?? "";
+    document.getElementById("m-tech").textContent = w.tech ?? "";
     modal.classList.add("open");
     document.body.classList.add("modal-open");
     closeBtn.focus();   // 開いたら閉じるボタンへフォーカスを移す
