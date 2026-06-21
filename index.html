@@ -19,6 +19,7 @@
     /* === Quiet Future — Governance, made human === */
     --rose:#e8a4b8;        /* 温かい差し色：経営者の"思想"・人間味 */
     --rose-dark:#d48fa3;   /* 濃いめ（hover） */
+    --rose-text:#a64c68;   /* 明るい地の上の小ラベル文字用（WCAG AA 4.5:1を満たす深いローズ） */
     --pink:#ffc0cb;
     --pink-soft:#fff0f3;   /* 淡いピンクのティント */
     --bg:#ffffff;
@@ -63,7 +64,7 @@
   .hero h1{font-size:34px;font-weight:500;line-height:1.7;letter-spacing:.1em;}
   .hero p.lead{margin-top:26px;color:var(--muted);font-size:16px;line-height:1.95;}
   .hero .badge{
-    font-family:var(--sans);display:inline-block;background:var(--pink-soft);color:var(--rose);
+    font-family:var(--sans);display:inline-block;background:var(--pink-soft);color:var(--rose-text);
     font-weight:600;font-size:11px;letter-spacing:.18em;
     padding:7px 18px;border-radius:50px;margin-bottom:26px;
   }
@@ -93,9 +94,9 @@
   .sec-head{text-align:center;margin-bottom:52px;}
   .sec-label{
     font-family:var(--sans);display:inline-flex;align-items:center;gap:12px;
-    color:var(--rose);font-weight:600;font-size:12px;letter-spacing:.26em;
+    color:var(--rose-text);font-weight:600;font-size:12px;letter-spacing:.26em;
   }
-  .sec-label .num{color:var(--ink);opacity:.4;font-weight:500;}
+  .sec-label .num{color:var(--muted);font-weight:500;}
   .sec-label .num::after{content:"";display:inline-block;width:24px;height:1px;background:var(--line);margin-left:12px;vertical-align:middle;}
   .sec-title{font-size:25px;font-weight:700;letter-spacing:.05em;margin:16px 0 14px;}
   .sec-desc{color:var(--muted);max-width:620px;margin:0 auto;font-size:15px;line-height:1.95;}
@@ -126,6 +127,7 @@
   .filters button:hover{border-color:var(--rose);color:var(--rose);}
   .filters button.active{background:var(--ink);color:#fff;border-color:var(--ink);}
   .gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;}
+  .gallery .empty{grid-column:1/-1;text-align:center;color:var(--muted);font-family:var(--sans);font-size:14px;padding:48px 0;}
   .work{
     border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--bg);
     cursor:pointer;transition:transform .3s ease,box-shadow .3s ease;
@@ -157,7 +159,7 @@
   .modal-box img{width:100%;display:block;}
   .modal-body{padding:36px;}
   .modal-body .tag{
-    font-family:var(--sans);display:inline-block;background:var(--pink-soft);color:var(--rose);font-weight:600;
+    font-family:var(--sans);display:inline-block;background:var(--pink-soft);color:var(--rose-text);font-weight:600;
     font-size:12px;letter-spacing:.05em;padding:5px 16px;border-radius:50px;margin-bottom:16px;
   }
   .modal-body h2{font-size:24px;font-weight:700;letter-spacing:.05em;margin-bottom:26px;}
@@ -414,6 +416,13 @@
    */
   function render(filter){
     const items = works.filter(w => filter === "all" || w.cat === filter);
+    if (items.length === 0){
+      const empty = document.createElement("p");
+      empty.className = "empty";
+      empty.textContent = "該当する実績はありません。";
+      gallery.replaceChildren(empty);
+      return;
+    }
     gallery.replaceChildren(...items.map(createCard));
   }
   render("all");
