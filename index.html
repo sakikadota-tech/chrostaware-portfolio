@@ -13,7 +13,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;600;700&family=Noto+Sans+JP:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;500;700&family=Noto+Sans+JP:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     /* === Quiet Future — Governance, made human === */
@@ -220,7 +220,7 @@
       <a href="#works" class="cta">実績を見る →</a>
     </div>
     <div class="hero-art">
-      <img src="work-efficiency.jpg" alt="コンセプトイメージ">
+      <img src="work-efficiency.jpg" alt="コンセプトイメージ" width="1200" height="1200" fetchpriority="high" decoding="async">
     </div>
   </div>
 </section>
@@ -318,7 +318,21 @@
 <footer>© 2026 ChroStaware ｜ Governance, made human.</footer>
 
 <script>
+  /**
+   * 1件の実績データの型（JSDocなのでビルド不要で型ヒントが効く）
+   * @typedef {Object} Work
+   * @property {string} img       画像ファイル名
+   * @property {string} cat       カテゴリID（フィルタ用の内部値）
+   * @property {string} catLabel  カテゴリ表示名
+   * @property {string} title     タイトル
+   * @property {string} problem   課題
+   * @property {string} made      作ったもの
+   * @property {string} result    結果
+   * @property {string} tech      使用技術
+   */
+
   // ===== 実績データ（ここを編集すれば作品を追加できます）=====
+  /** @type {Work[]} */
   const works = [
     {
       img:"work-control.jpg",
@@ -351,22 +365,56 @@
 
   // ===== ギャラリー描画 =====
   const gallery = document.getElementById("gallery");
-  function render(filter){
-    gallery.innerHTML = "";
-    works.filter(w => filter==="all" || w.cat===filter).forEach((w)=>{
-      const el = document.createElement("div");
-      el.className = "work";
-      el.setAttribute("role", "button");
-      el.setAttribute("tabindex", "0");
-      el.setAttribute("aria-label", w.title + " の詳細を開く");
-      el.innerHTML = `
-        <div class="thumb"><span class="tag">${w.catLabel}</span>
-          <img src="${w.img}" alt="${w.title}" loading="lazy"></div>
-        <div class="meta"><h3>${w.title}</h3><p>${w.problem}</p></div>`;
-      el.addEventListener("click", ()=>openModal(w));
-      el.addEventListener("keydown", e=>{ if(e.key==="Enter"||e.key===" "){ e.preventDefault(); openModal(w); } });
-      gallery.appendChild(el);
+
+  /**
+   * 実績カードのDOMを1枚生成する（責務は「カードを作る」ことだけ）。
+   * 値はすべて textContent / プロパティ代入で設定し、innerHTMLへ文字列を
+   * 展開しない＝将来データが外部入力になってもXSSが起きない作り。
+   * @param {Work} w
+   * @returns {HTMLElement}
+   */
+  function createCard(w){
+    const card = document.createElement("div");
+    card.className = "work";
+    card.setAttribute("role", "button");
+    card.setAttribute("tabindex", "0");
+    card.setAttribute("aria-label", w.title + " の詳細を開く");
+
+    const thumb = document.createElement("div");
+    thumb.className = "thumb";
+    const tag = document.createElement("span");
+    tag.className = "tag";
+    tag.textContent = w.catLabel;
+    const img = document.createElement("img");
+    img.src = w.img;
+    img.alt = w.title;
+    img.loading = "lazy";
+    img.decoding = "async";
+    thumb.append(tag, img);
+
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    const h3 = document.createElement("h3");
+    h3.textContent = w.title;
+    const desc = document.createElement("p");
+    desc.textContent = w.problem;
+    meta.append(h3, desc);
+
+    card.append(thumb, meta);
+    card.addEventListener("click", () => openModal(w));
+    card.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " "){ e.preventDefault(); openModal(w); }
     });
+    return card;
+  }
+
+  /**
+   * フィルタ条件で実績を描画する（責務は「絞り込み＋差し込み」だけ）。
+   * @param {string} filter カテゴリID、または "all"
+   */
+  function render(filter){
+    const items = works.filter(w => filter === "all" || w.cat === filter);
+    gallery.replaceChildren(...items.map(createCard));
   }
   render("all");
 
